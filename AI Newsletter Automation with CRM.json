@@ -1,0 +1,612 @@
+{
+  "name": "AI Newsletter Automation with CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Newsletter Request Form \n- Accepts: topic, subject, newsletter body (optional), personalization toggle, additional instructions\n- If newsletter body is empty → generate with AI. Otherwise skip.",
+        "height": 304,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -128,
+        496
+      ],
+      "typeVersion": 1,
+      "id": "91bcf183-cb54-4546-9589-fde2923cb6ce",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "formTitle": "Newsletter for customer by AI agent",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Subject line",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Newsletter body",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Topic"
+            },
+            {
+              "fieldLabel": "personalized",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Yes"
+                  },
+                  {
+                    "option": "No"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Additional Instructions",
+              "fieldName": "additional_instructions"
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -64,
+        640
+      ],
+      "id": "f982dd9d-771a-44e2-b0ab-217ec5579539",
+      "name": "Newsletter Request Form",
+      "webhookId": "9432d903-fc7f-4e3f-a2c4-25a5e45f28ba"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e5a203b3-5f70-4581-86ed-bfdc535cf8a3",
+              "leftValue": "={{ $json[\"Newsletter body\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        160,
+        640
+      ],
+      "id": "ed4455c8-ad13-42ab-b9dd-3ad51350ef22",
+      "name": "Check: AI Needed?"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert newsletter copywriter with years of experience \nwriting engaging email campaigns across industries.\n\nWrite a professional newsletter email body based on the details below.\n\n---\nTopic: {{ $json.Topic }}\n\nAdditional Instructions from Client: {{ $json.additional_instructions || 'None' }}\n---\n\nCONTENT REQUIREMENTS:\n- If additional instructions are provided, follow them strictly\n- Make the content engaging, informative and valuable to the reader\n- Keep it concise but complete (150-350 words depending on topic complexity)\n- Use a warm, professional tone that builds trust with the reader\n- If the topic includes statistics, facts or data — highlight them using <strong>\n- If the topic contains any URLs or links — wrap them as <a href=\"URL\">readable text</a>\n- Break content into digestible sections if topic is complex\n\nHTML REQUIREMENTS:\n- Return ONLY the email body in clean HTML\n- Use tags appropriately: <h2> for section title, <p> for paragraphs, \n  <ul><li> for lists, <strong> for emphasis\n- Do NOT include <html>, <head>, <body>, <style> tags\n- Do NOT include the subject line inside the body\n- Do NOT add any markdown, backticks or code fences\n\nSTRUCTURE TO FOLLOW:\n1. Opening hook — one strong sentence to grab attention\n2. Main content — valuable information about the topic\n3. Key takeaway or call to action — what should the reader do next?\n4. Sign-off:\n<p>Best regards,<br><strong>The Newsletter Team</strong></p>\n\nRemember: You are writing for real people. \nMake every word count.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        384,
+        512
+      ],
+      "id": "4c0cb2a8-9097-48a0-b18a-fbbaf0e9002b",
+      "name": "AI Newsletter Writer"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        464,
+        736
+      ],
+      "id": "8b584889-97a8-46a2-b4f7-aaf9d709e78d",
+      "name": "Groq LLM (llama)",
+      "credentials": {
+        "groqApi": {
+          "id": "pZgdbyCxGkhjJMa6",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f418483e-da2e-4389-88c2-1969866d890c",
+              "name": "final_body",
+              "value": "={{ $json['Newsletter body'] || $json.text}}",
+              "type": "string"
+            },
+            {
+              "id": "1d580da3-9969-401c-92e0-467d2ba4a85f",
+              "name": "final_subject",
+              "value": "={{ $('Newsletter Request Form').item.json['Subject line'] }}",
+              "type": "string"
+            },
+            {
+              "id": "419720d8-ce96-4e44-aefd-ca375cd69247",
+              "name": "personalized",
+              "value": "={{ $('Newsletter Request Form').item.json.personalized }}",
+              "type": "string"
+            },
+            {
+              "id": "e7a34b12-a5e7-4a01-98da-d7d3cdb9a8ac",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        736,
+        640
+      ],
+      "id": "58c165b7-2033-443d-a91e-4daccc268d8a",
+      "name": "Normalize Fields"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "17r0Xl-8Hdmr6VrwOpUoR-6kDhGWx2zk6fTF3k-w0nnk",
+          "mode": "list",
+          "cachedResultName": "Basic CRM for n8n test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17r0Xl-8Hdmr6VrwOpUoR-6kDhGWx2zk6fTF3k-w0nnk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17r0Xl-8Hdmr6VrwOpUoR-6kDhGWx2zk6fTF3k-w0nnk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        960,
+        640
+      ],
+      "id": "7665af61-7e6a-4c64-892e-34f27465aa99",
+      "name": "Fetch Subscribers",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uGnnmPybF4HzcN5Y",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0360e179-2bd6-4ba3-8593-87d4f176c9b1",
+              "leftValue": "={{ $('Normalize Fields').item.json.personalized }}",
+              "rightValue": "Yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1184,
+        640
+      ],
+      "id": "18be7ee4-9954-451b-89ce-0fdf60301a87",
+      "name": "Check: Personalized Send?"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1408,
+        496
+      ],
+      "id": "2256037c-dc8c-449c-bdae-1c55d60199b8",
+      "name": "Send Loop (Per Person)"
+    },
+    {
+      "parameters": {
+        "fromEmail": "naimak659@gmail.com",
+        "toEmail": "={{ $json['Email Address'] }}",
+        "subject": "={{ $('Normalize Fields').item.json.final_subject }}",
+        "html": "=Hi {{ $json['Full Name'] }},\n{{ $('Normalize Fields').first().json.final_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1632,
+        320
+      ],
+      "id": "623bf6e9-fd2f-4be1-aaec-dcfdc04e5fcc",
+      "name": "Send Personalized Email",
+      "webhookId": "adcf6396-9954-426d-a8ff-a3ffcfcd2542",
+      "credentials": {
+        "smtp": {
+          "id": "ZEgFPC2BARM2HVf1",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1856,
+        448
+      ],
+      "id": "06413821-40b9-498c-8183-dcbc8a874617",
+      "name": "Rate Limit Delay",
+      "webhookId": "13947ca3-f4fc-4904-9ef0-ed5c12fd7ca4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const sheetItems = $input.all();\nconst editFields = $('Normalize Fields').first().json;\n\nconst emails = sheetItems.map(i => i.json['Email Address']).join(',');\n\nreturn [{\n  json: {\n    all_emails: emails,\n    final_subject: editFields.final_subject,\n    final_body: editFields.final_body\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        752
+      ],
+      "id": "47b54acb-f5f7-472c-905e-4ce0210c33f5",
+      "name": "Aggregate Emails"
+    },
+    {
+      "parameters": {
+        "fromEmail": "naimak659@gmail.com",
+        "toEmail": "={{ $json.all_emails }}",
+        "subject": "={{ $json.final_subject }}",
+        "html": "={{ $json.final_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1632,
+        752
+      ],
+      "id": "9a1fbbfc-453c-4dcc-b20e-71410a44dbbe",
+      "name": "Send Bulk Email",
+      "webhookId": "adcf6396-9954-426d-a8ff-a3ffcfcd2542",
+      "credentials": {
+        "smtp": {
+          "id": "ZEgFPC2BARM2HVf1",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "={{ $('Normalize Fields').item.json.final_subject }}",
+        "completionMessage": "=Email Body: {{ $('Normalize Fields').item.json.final_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        1856,
+        640
+      ],
+      "id": "f79d8777-d859-4251-b3ba-0f298610e349",
+      "name": "Completion Response",
+      "webhookId": "339c0bee-2507-4b2f-80f0-03308b918571"
+    },
+    {
+      "parameters": {
+        "content": "## AI Newsletter Writer\n- Uses Groq LLM to generate HTML newsletter based on topic and client instructions\n- AI model powering the newsletter generation",
+        "height": 544,
+        "width": 336
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        336,
+        336
+      ],
+      "typeVersion": 1,
+      "id": "8954128f-c70e-49ec-852d-0fd7ac0ed4e1",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Fetch Subscribers\n- Merges AI-generated or manual body into unified fields\n- Reads customer name and email from Google Sheets CRM\n- Yes → loop per person with name. No → bulk send via comma-separated emails",
+        "height": 336,
+        "width": 624
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        704,
+        464
+      ],
+      "typeVersion": 1,
+      "id": "610c1f8a-8e64-451f-ab06-9c96c3621889",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Send Personalized Email \n- Sends individual HTML email with recipient's name injected",
+        "height": 432,
+        "width": 672
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1360,
+        224
+      ],
+      "typeVersion": 1,
+      "id": "25397516-87af-4a7b-af18-879f6ac62bfd",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Send Bulk Email \n- Sends one email to all subscribers at once",
+        "height": 240,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1376,
+        672
+      ],
+      "typeVersion": 1,
+      "id": "c5fe1e16-9370-4e5b-a42b-e598e977bfdb",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## SETUP REQUIRED:\n─────────────────\n* **Google Sheets** — connect Google OAuth\n* **Gmail** — configure App Password (SMTP)\n* **AI**  — add API key in credentials\n* **Sheet** columns needed: Full Name, Email Address\n\nRATE LIMIT:\n─────────────────\n- Personalized: 5s delay between emails\n- Bulk: single send, all emails comma-separated\n- Safe daily limit: ~150 personalized / ~500 bulk\n",
+        "height": 320,
+        "width": 416,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -592,
+        464
+      ],
+      "typeVersion": 1,
+      "id": "3c16ed91-dbc2-46bc-8e40-50bcb7960908",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "### HOW TO USE:\n─────────────────\n1. Fill the Newsletter Request Form\n2. Leave body empty → AI writes it\n3. Fill body → skips AI, sends directly\n4. Toggle personalization for name-based emails",
+        "height": 176,
+        "width": 432,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -128,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "1bb67538-c5fb-48e1-9164-0a043492a1b0",
+      "name": "Sticky Note6"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Newsletter Request Form": {
+      "main": [
+        [
+          {
+            "node": "Check: AI Needed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check: AI Needed?": {
+      "main": [
+        [
+          {
+            "node": "AI Newsletter Writer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normalize Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Newsletter Writer": {
+      "main": [
+        [
+          {
+            "node": "Normalize Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq LLM (llama)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Newsletter Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Fields": {
+      "main": [
+        [
+          {
+            "node": "Fetch Subscribers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Subscribers": {
+      "main": [
+        [
+          {
+            "node": "Check: Personalized Send?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check: Personalized Send?": {
+      "main": [
+        [
+          {
+            "node": "Send Loop (Per Person)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Loop (Per Person)": {
+      "main": [
+        [
+          {
+            "node": "Completion Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Personalized Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Personalized Email": {
+      "main": [
+        [
+          {
+            "node": "Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Send Loop (Per Person)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Emails": {
+      "main": [
+        [
+          {
+            "node": "Send Bulk Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Bulk Email": {
+      "main": [
+        [
+          {
+            "node": "Completion Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "579a4fd7-f4bc-4a0e-b07f-06af2d87f7e0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b436645d508238cda90ebb4c240a4f24e0c1c7ab1d612ee403e1af62f7f5dea5"
+  },
+  "id": "O3E9WtWLKY76BQMX",
+  "tags": []
+}
