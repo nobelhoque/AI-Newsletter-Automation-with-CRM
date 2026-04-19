@@ -49,7 +49,7 @@ To get this workflow running, you will need:
 
 Below is a preview of the automation logic. You can also find a high-resolution version in the project files.
 
-[📄 View High-Res Workflow PDF Preview](./AI%20Newsletter%20Automation%20with%20CRM%20(1).pdf)
+[📄 View High-Res Workflow PDF Preview](./AI%20Newsletter%20Automation%20with%20CRM.pdf)
 
 *(Note for Upwork/GitHub: It is highly recommended to upload a screenshot of your n8n canvas as `preview.png` and link it here for a better visual impact.)*
 
